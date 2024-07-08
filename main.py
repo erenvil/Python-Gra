@@ -4,10 +4,10 @@ from moviepy.editor import VideoFileClip as vc
 
 pg.init()
 # Variables
-x = 1080
-y = 720
-mode = pg.SWSURFACE
-screen = pg.display.set_mode((x,y), mode)
+x = 1920
+y = 1080
+isFullScreen = 0
+screen = pg.display.set_mode((x,y), isFullScreen)
 clock = pg.time.Clock()
 pg.display.set_caption("My Game")
 
@@ -17,6 +17,91 @@ video_file["MenuVideo2"] = vc("MenuVideo2.mp4").resize((x,y))
 running_video = None
 running = True
 isMenu = True
+
+
+tile_size = 64 # Rozmiar kafelka
+
+tiles = {} # Słownik przechowujący zdjęcia kafelków
+tiles[0] = pg.image.load("Grass1.png") # Kafelek trawy
+tiles[1] = pg.image.load("Dirt.png") # Kafelek ziemi
+tiles[2] = pg.image.load("Stone.png") # Kafelek kamienia
+tiles[3] = pg.image.load("IronOre.png") # Kafelek rudy żelaza
+tutorial_map = [ # Mapa początkowa
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,3,2,2,3,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,3,2,2,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,3,2,2,3,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,3,2,2,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,2,2,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+]
+
+objects = {} # Słownik przechowujący zdjęcia obiektów
+objects[0] = pg.image.load("none.png") # Obiekt pusty
+objects[1] = pg.image.load("Grass.png") # Obiekt trawy
+tutorial_objects_map = [ # Mapa rozmieszczenia obiektów
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+]
 
 class drawObject():
     def __init__(self, screen, color, posX, posY, width, height,font, size, text, textColor, image):
@@ -98,7 +183,7 @@ volumeButtonA = drawObject(screen,volumeButtonA_color,volumeButtonA_posX,volumeB
 
 # Volume Button Subtract
 volumeButtonS_color = (64, 64, 64)
-volumeButtonS_posX = 1080 - 150
+volumeButtonS_posX = x - 150
 volumeButtonS_posY = 0
 volumeButtonS_width = 100
 volumeButtonS_height = 100
@@ -111,7 +196,7 @@ resolutionText = drawObject(screen, None, 0, 150, 600, 100, None, 60, f"Width = 
 
 # Resolution Button Add
 resButtonA_color = (64, 64, 64)
-resButtonA_posX = 1080 - 300
+resButtonA_posX = x - 300
 resButtonA_posY = 150
 resButtonA_width = 100
 resButtonA_height = 100
@@ -156,19 +241,10 @@ def mainMenu():
 def videoInit():
     global video_file
     global running_video
-    global x,y
-    video_file["MenuVideo1"] = vc("MenuVideo1.mp4").resize((x,y))
-    video_file["MenuVideo2"] = vc("MenuVideo2.mp4").resize((x,y))
     running_video = video_file[rd.choice(["MenuVideo1","MenuVideo2"])].iter_frames(fps = 30, dtype = "uint8")
 
 def eventListener():
-    global running
-    global isMenu
-    global volLev
-    global x
-    global y
-    global screen
-    global mode
+    global running,isMenu,volLev,x,y,screen,isFullScreen
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
@@ -216,7 +292,7 @@ def eventListener():
                 elif x == 1920 and y == 1080:
                     x = 1080
                     y = 720
-                screen = pg.display.set_mode((x,y), mode)
+                screen = pg.display.set_mode((x,y))
                 resolutionText.text = f"Width = {x}, height = {y}"
                 volumeText.drawText()
                 volumeButtonA.drawButton()
@@ -227,11 +303,11 @@ def eventListener():
                 resolutionText.clear()
                 resolutionText.drawText()
             elif resButtonMode.posX <= mouseX <= resButtonMode.posX + resButtonMode.width and resButtonMode.posY <= mouseY <= resButtonMode.posY + resButtonMode.height:
-                if mode == pg.SWSURFACE:
-                    mode = pg.FULLSCREEN
+                if isFullScreen == 0:
+                    isFullScreen = pg.FULLSCREEN
                 else:
-                    mode = pg.SWSURFACE
-                screen = pg.display.set_mode((x,y), mode)
+                    isFullScreen = 0
+                screen = pg.display.set_mode((x,y), isFullScreen)
                 resolutionText.text = f"Width = {x}, height = {y}"
                 volumeText.drawText()
                 volumeButtonA.drawButton()
@@ -241,16 +317,14 @@ def eventListener():
                 back_arrow.drawImage()
                 resolutionText.clear()
                 resolutionText.drawText()
+
 def videoPlay():
     global video_file
     global running_video
     global frame
-    global x,y
     try:
         frame = next(running_video)
     except StopIteration:
-        video_file["MenuVideo1"] = vc("MenuVideo1.mp4").resize((x,y))
-        video_file["MenuVideo2"] = vc("MenuVideo2.mp4").resize((x,y))
         running_video = video_file[rd.choice(["MenuVideo1","MenuVideo2"])].iter_frames(fps = 30, dtype = "uint8")
         frame = next(running_video)
 
@@ -268,8 +342,10 @@ def drawMenuButtons():
     quitButton.drawButton()
 
 def tutorialMap():
-    if isMenu == False:
-        screen.fill((0,0,0))
+    while isMenu == False:
+        global screen
+        drawMap(tutorial_map,tutorial_objects_map)
+        pg.display.flip()
 
 def opptionsMenu():
     global isMenu
@@ -282,6 +358,17 @@ def opptionsMenu():
         resButtonA.drawButton()
         resButtonMode.drawButton()
         back_arrow.drawImage()
-        
+
+def drawMap(map, obj): # Funkcja rysująca mapę oraz obiekty
+    # Iteracja przez każdą komórkę mapy w celu narysowania odpowiednich kafelków.
+    for y, row in enumerate(map):
+        for x, tile in enumerate(row):
+            # Rysowanie kafelka na ekranie w odpowiedniej pozycji.
+            screen.blit(tiles[tile], (x * tile_size, y * tile_size ))
+     # Iteracja przez każdą komórkę obiektów w celu narysowania odpowiednich obiektów.
+    for y, row in enumerate(obj):
+        for x, tile in enumerate(row):
+            # Rysowanie obiektu na ekranie w odpowiedniej pozycji.
+            screen.blit(objects[tile], (x * tile_size, y * tile_size))
 
 game()
